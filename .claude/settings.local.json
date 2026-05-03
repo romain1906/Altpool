@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \"import bcrypt; print\\('admin:', bcrypt.hashpw\\(b'admin', bcrypt.gensalt\\(10\\)\\).decode\\(\\)\\); print\\('user:', bcrypt.hashpw\\(b'user', bcrypt.gensalt\\(10\\)\\).decode\\(\\)\\)\")",
+      "Bash(pip3 install *)",
+      "Bash(htpasswd -bnBC 10 \"\" admin)",
+      "Bash(htpasswd -bnBC 10 \"\" user)",
+      "Bash(chmod +x /Users/romain/Documents/AltPool/start.sh /Users/romain/Documents/AltPool/stop.sh)",
+      "WebSearch",
+      "Bash(grep -v \"//\\\\|^$\")",
+      "Bash(mvn -q -DskipTests compile)",
+      "Bash(mvn -q clean compile)",
+      "Bash(mvn -q compile)",
+      "Bash(sed -i '' -e 's|fontFamily: \"Fraunces, serif\", fontVariationSettings: ..opsz. 144,.SOFT. 40,.wght. 400.,|fontFamily: \"Inter, sans-serif\", fontWeight: 800,|g' -e 's|fontFamily: \"Fraunces, serif\",|fontFamily: \"Inter, sans-serif\", fontWeight: 800,|g' /Users/romain/Documents/AltPool/frontend/src/pages/MyClubs.js /Users/romain/Documents/AltPool/frontend/src/pages/ForgotPassword.js)",
+      "Bash(sed -i '' 's|color: \"#5A6861\"|color: \"#8A92B2\"|g' /Users/romain/Documents/AltPool/frontend/src/pages/ForgotPassword.js)"
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+version: "3.9"
+
+# Docker = base de données uniquement.
+# Le backend (Spring Boot) et le frontend (React) se lancent via IntelliJ.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: altpool-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: altpool
+      POSTGRES_USER: altpool
+      POSTGRES_PASSWORD: altpool
+    ports:
+      - "5432:5432"
+    volumes:
+      - altpool-db-data:/var/lib/postgresql/data
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/10-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U altpool -d altpool"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  altpool-db-data:

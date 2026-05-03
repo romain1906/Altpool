@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Backend" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+    <module name="altpool-backend" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="com.altpool.AltPoolApplication" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/backend" />
+    <envs>
+      <env name="DB_URL" value="jdbc:postgresql://localhost:5432/altpool" />
+      <env name="DB_USER" value="altpool" />
+      <env name="DB_PASSWORD" value="altpool" />
+    </envs>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

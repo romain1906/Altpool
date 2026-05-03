@@ -1,0 +1,36 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: altpool
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 5MB
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/altpool}
+    username: ${DB_USER:altpool}
+    password: ${DB_PASSWORD:altpool}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+    open-in-view: false
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:ZmQ0ZGI5NjQ0MDQwY2I4MjMxY2Y3ZmI3MjdhN2ZmMjNhODdiMmIyMjhkNDFkYjk4NzJmYjJjNWI3Njg2ODYzNw==}
+    expiration-ms: 86400000
+  upload:
+    dir: ${UPLOAD_DIR:./uploads}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
