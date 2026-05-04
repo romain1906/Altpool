@@ -1,0 +1,92 @@
+# =====================================================================
+# AltPool — stack de production
+# 4 services : postgres + backend Spring + frontend nginx + reverse proxy nginx (TLS)
+#
+# Lancer avec :  docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+# =====================================================================
+
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: altpool-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - altpool-db-data:/var/lib/postgresql/data
+      - ./backend/sql/init.sql:/docker-entrypoint-initdb.d/10-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - altpool-net
+
+  backend:
+    build:
+      context: ./backend
+    image: altpool-backend:latest
+    container_name: altpool-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      UPLOAD_DIR: /var/altpool/uploads
+      SPRING_PROFILES_ACTIVE: prod
+    volumes:
+      - altpool-uploads:/var/altpool/uploads
+    networks:
+      - altpool-net
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        REACT_APP_API_URL: /api
+    image: altpool-frontend:latest
+    container_name: altpool-frontend
+    restart: unless-stopped
+    networks:
+      - altpool-net
+
+  proxy:
+    image: nginx:1.27-alpine
+    container_name: altpool-proxy
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - frontend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/nginx/altpool.conf:/etc/nginx/conf.d/altpool.conf:ro
+      - ./deploy/certbot/conf:/etc/letsencrypt:ro
+      - ./deploy/certbot/www:/var/www/certbot:ro
+    networks:
+      - altpool-net
+
+  certbot:
+    image: certbot/certbot:latest
+    container_name: altpool-certbot
+    volumes:
+      - ./deploy/certbot/conf:/etc/letsencrypt
+      - ./deploy/certbot/www:/var/www/certbot
+    entrypoint: /bin/sh -c "trap exit TERM; while :; do certbot renew --quiet; sleep 12h & wait $${!}; done;"
+
+volumes:
+  altpool-db-data:
+  altpool-uploads:
+
+networks:
+  altpool-net:
+    driver: bridge

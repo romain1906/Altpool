@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import notify from "devextreme/ui/notify";
 import api from "../services/api";
-import { isAdmin, currentUser } from "../services/auth";
+import { isAdmin, currentUser, isProfileLocked } from "../services/auth";
 import { matchView } from "../utils/matchView";
 import NewMatchModal from "../components/NewMatchModal";
 
@@ -62,11 +62,16 @@ export default function Matches() {
         </h2>
         <button
           type="button" onClick={() => setShowNew(true)}
+          disabled={isProfileLocked()}
+          title={isProfileLocked() ? "Complète ton profil pour pouvoir créer un match" : ""}
           style={{
-            background: "#7B5CFF", color: "#fff", border: "none",
-            padding: "10px 18px", borderRadius: 100, cursor: "pointer",
+            background: isProfileLocked() ? "rgba(123,92,255,0.3)" : "#7B5CFF",
+            color: "#fff", border: "none",
+            padding: "10px 18px", borderRadius: 100,
+            cursor: isProfileLocked() ? "not-allowed" : "pointer",
             fontSize: 13, fontWeight: 600, fontFamily: "inherit",
             display: "inline-flex", alignItems: "center", gap: 8, marginTop: 4,
+            opacity: isProfileLocked() ? 0.6 : 1,
           }}>
           <i className="fi fi-rr-plus" /> Nouveau match
         </button>

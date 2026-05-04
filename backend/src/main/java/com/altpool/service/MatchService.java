@@ -75,6 +75,10 @@ public class MatchService {
         Player p2 = playerRepository.findById(req.getPlayer2Id())
                 .orElseThrow(() -> ApiException.notFound("Joueur 2 introuvable"));
 
+        // Gating profil : les 2 joueurs doivent avoir un profil complet
+        ProfileGuard.requireCompletePlayer(p1, "créer un match");
+        ProfileGuard.requireCompletePlayer(p2, "créer un match");
+
         boolean shareClub = p1.getClubs().stream()
                 .anyMatch(c -> p2.getClubs().stream().anyMatch(c2 -> c2.getId().equals(c.getId())));
         if (!shareClub) {

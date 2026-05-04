@@ -36,6 +36,23 @@ export function isGerant() { return role() === "GERANT"; }
 export function isJoueur() { return role() === "JOUEUR"; }
 export function canManage() { return isAdmin() || isGerant(); }
 
+/** Cache local du statut profil — mis à jour par fetchMe(). */
+const PROFILE_KEY = "altpool.profileComplete";
+export function setProfileComplete(complete) {
+  localStorage.setItem(PROFILE_KEY, complete ? "1" : "0");
+  window.dispatchEvent(new CustomEvent("altpool:profile-changed"));
+}
+export function isProfileComplete() {
+  // null si jamais fetché, '1' ou '0' sinon
+  const v = localStorage.getItem(PROFILE_KEY);
+  if (v === null) return null;
+  return v === "1";
+}
+/** True si le user est JOUEUR avec profil incomplet (= bloqué pour engagements). */
+export function isProfileLocked() {
+  return isJoueur() && isProfileComplete() === false;
+}
+
 /** Force le rechargement de l'avatar (bump cache) — version timestamp. */
 export function bumpAvatarVersion() {
   const v = Date.now();

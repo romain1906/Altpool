@@ -46,6 +46,9 @@ public class ReservationService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> ApiException.unauthorized("User not found"));
 
+        // Gating profil pour les JOUEUR
+        ProfileGuard.requireCompleteProfile(user, "réserver une table");
+
         // ADMIN et GERANT (du club du billard) bypass.
         boolean isAdmin = user.getRole() == Role.ADMIN;
         boolean isManagerOfClub = user.getRole() == Role.GERANT

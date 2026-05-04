@@ -131,6 +131,9 @@ public class TournamentService implements MatchValidationListener {
                 && t.getRegistrationDeadline().isBefore(LocalDateTime.now())) {
             throw ApiException.badRequest("La deadline d'inscription est dépassée");
         }
+        // Gating profil
+        ProfileGuard.requireCompleteProfile(u, "t'inscrire à un tournoi");
+
         Player p = playerRepository.findByUserId(u.getId())
                 .orElseThrow(() -> ApiException.badRequest("Tu n'as pas de profil joueur"));
         boolean inClub = p.getClubs().stream()

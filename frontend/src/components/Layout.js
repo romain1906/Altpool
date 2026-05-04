@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
-import { currentUser, isAdmin, canManage, logout, avatarVersion } from "../services/auth";
+import { currentUser, isAdmin, canManage, logout, avatarVersion, setProfileComplete } from "../services/auth";
 import api from "../services/api";
 import Avatar from "./Avatar";
 import BottomNav from "./BottomNav";
 import BgOrbs from "./BgOrbs";
+import ProfileIncompleteBanner from "./ProfileIncompleteBanner";
 
 export default function Layout({ children }) {
   const navigate = useNavigate();
@@ -79,6 +80,13 @@ export default function Layout({ children }) {
     refresh();
     const interval = setInterval(refresh, 30000);
     return () => clearInterval(interval);
+  }, [location.pathname]);
+
+  // Cache du statut profileComplete (utilisé par la sidebar et les boutons disabled)
+  useEffect(() => {
+    api.get("/users/me")
+      .then((r) => setProfileComplete(!!r.data.profileComplete))
+      .catch(() => {});
   }, [location.pathname]);
 
   const handleLogout = () => {
@@ -157,6 +165,7 @@ export default function Layout({ children }) {
           </NavLink>
           <NavLink to="/profile" className={link}>
             <i className="fi fi-rr-id-badge" /> Mon profil
+            <ProfileDot />
           </NavLink>
 
           {canManage() && (
@@ -193,10 +202,38 @@ export default function Layout({ children }) {
       </aside>
 
       {/* ---------- Content ----------------------------------------- */}
-      <main className="content">{children}</main>
+      <main className="content">
+        <ProfileIncompleteBanner />
+        {children}
+      </main>
 
       {/* ---------- Bottom nav (mobile uniquement, via CSS) --------- */}
       <BottomNav />
     </div>
   );
+}
+
+/** Pastille rouge à côté du lien "Mon profil" si JOUEUR avec profil incomplet. */
+function ProfileDot() {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const refresh = () => {
+      const v = localStorage.getItem("altpool.profileComplete");
+      const u = currentUser();
+      setShow(u?.role === "JOUEUR" && v === "0");
+    };
+    refresh();
+    window.addEventListener("altpool:profile-changed", refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      window.removeEventListener("altpool:profile-changed", refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, []);
+  if (!show) return null;
+  return <span style={{
+    marginLeft: "auto", width: 8, height: 8, borderRadius: "50%",
+    background: "#EF4444", boxShadow: "0 0 8px #EF4444",
+    animation: "pulse 2s ease-in-out infinite",
+  }} />;
 }

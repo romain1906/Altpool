@@ -69,6 +69,7 @@ public class UserService {
         User u = userRepository.findByUsername(username)
                 .orElseThrow(() -> ApiException.unauthorized("User not found"));
 
+        // Nom du joueur (uniquement JOUEUR)
         if (u.getRole() == Role.JOUEUR && req.getPlayerName() != null) {
             String trimmed = req.getPlayerName().trim();
             if (trimmed.isEmpty()) {
@@ -79,6 +80,34 @@ public class UserService {
             p.setName(trimmed);
             playerRepository.save(p);
         }
+
+        // Champs personnels
+        if (req.getEmail() != null) {
+            String email = req.getEmail().trim();
+            u.setEmail(email.isEmpty() ? null : email);
+        }
+        if (req.getBirthDate() != null) {
+            // Validation âge ≥ 16 ans
+            int age = java.time.Period.between(req.getBirthDate(), java.time.LocalDate.now()).getYears();
+            if (age < 16) {
+                throw ApiException.badRequest("Tu dois avoir au moins 16 ans");
+            }
+            if (age > 120) {
+                throw ApiException.badRequest("Date de naissance invalide");
+            }
+            u.setBirthDate(req.getBirthDate());
+        }
+        if (req.getGender() != null) u.setGender(req.getGender());
+        if (req.getPhone() != null) {
+            String phone = req.getPhone().trim();
+            u.setPhone(phone.isEmpty() ? null : phone);
+        }
+        if (req.getCountry() != null) {
+            String country = req.getCountry().trim();
+            u.setCountry(country.isEmpty() ? null : country);
+        }
+
+        userRepository.save(u);
         return toDto(u);
     }
 
@@ -124,6 +153,12 @@ public class UserService {
                 .id(u.getId())
                 .username(u.getUsername())
                 .role(u.getRole())
+                .email(u.getEmail())
+                .birthDate(u.getBirthDate())
+                .gender(u.getGender())
+                .phone(u.getPhone())
+                .country(u.getCountry())
+                .profileComplete(u.isProfileComplete())
                 .managedClubs(managed);
 
         if (u.getRole() == Role.JOUEUR) {

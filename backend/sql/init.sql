@@ -33,10 +33,16 @@ CREATE TABLE clubs (
 );
 
 CREATE TABLE users (
-    id       BIGSERIAL PRIMARY KEY,
-    username VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    role     VARCHAR(32)  NOT NULL CHECK (role IN ('ADMIN', 'GERANT', 'JOUEUR'))
+    id          BIGSERIAL PRIMARY KEY,
+    username    VARCHAR(255) NOT NULL UNIQUE,
+    password    VARCHAR(255) NOT NULL,
+    role        VARCHAR(32)  NOT NULL CHECK (role IN ('ADMIN', 'GERANT', 'JOUEUR')),
+    -- Profil personnel (rempli par l'utilisateur après sa première connexion)
+    email       VARCHAR(255),
+    birth_date  DATE,
+    gender      VARCHAR(24) CHECK (gender IN ('MALE', 'FEMALE', 'OTHER', 'NOT_SPECIFIED')),
+    phone       VARCHAR(32),
+    country     VARCHAR(64)
 );
 
 -- M2M : un GERANT gère N clubs, un CLUB a N gérants

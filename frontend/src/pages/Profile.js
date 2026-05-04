@@ -22,12 +22,20 @@ export default function Profile() {
   const [pwdForm, setPwdForm] = useState({ oldPassword: "", newPassword: "", confirmPassword: "" });
   const [avatarV, setAvatarV] = useState(avatarVersion());
   const fileRef = useRef(null);
+  const [perso, setPerso] = useState({ email: "", birthDate: "", gender: "", phone: "", country: "" });
 
   const load = useCallback(() => {
     api.get("/users/me")
        .then((r) => {
          setMe(r.data);
          setEditName(r.data.playerName || "");
+         setPerso({
+           email: r.data.email || "",
+           birthDate: r.data.birthDate || "",
+           gender: r.data.gender || "",
+           phone: r.data.phone || "",
+           country: r.data.country || "",
+         });
        })
        .catch(() => {});
   }, []);
@@ -47,6 +55,41 @@ export default function Profile() {
       setMe(data);
       setEditName(data.playerName || "");
       notify("Profil mis à jour", "success", 2000);
+    } catch (err) {
+      notify(err.response?.data?.message || "Erreur", "error", 3000);
+    }
+  };
+
+  const savePerso = async () => {
+    if (!perso.email?.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(perso.email.trim())) {
+      notify("Email invalide", "error", 2500); return;
+    }
+    if (!perso.birthDate) { notify("Date de naissance requise", "error", 2500); return; }
+    if (!perso.gender) { notify("Genre requis", "error", 2500); return; }
+    try {
+      const wasComplete = me?.profileComplete;
+      const { data } = await api.patch("/users/me", {
+        email: perso.email.trim(),
+        birthDate: perso.birthDate,
+        gender: perso.gender,
+        phone: perso.phone?.trim() || null,
+        country: perso.country?.trim() || null,
+      });
+      setMe(data);
+      setPerso({
+        email: data.email || "",
+        birthDate: data.birthDate || "",
+        gender: data.gender || "",
+        phone: data.phone || "",
+        country: data.country || "",
+      });
+      if (data.profileComplete && !wasComplete) {
+        notify("🎉 Profil complet — tu peux maintenant jouer !", "success", 4000);
+        // Notifie la sidebar pour rafraîchir le badge
+        window.dispatchEvent(new CustomEvent("altpool:profile-changed"));
+      } else {
+        notify("Informations enregistrées", "success", 2000);
+      }
     } catch (err) {
       notify(err.response?.data?.message || "Erreur", "error", 3000);
     }
@@ -338,6 +381,9 @@ export default function Profile() {
         </div>
       )}
 
+      {/* ---------- Informations personnelles ---------------------------- */}
+      <PersoSection me={me} perso={perso} setPerso={setPerso} onSave={savePerso} />
+
       {/* ---------- Sécurité --------------------------------------------- */}
       <div className="card">
         <h3 style={{
@@ -477,3 +523,140 @@ function ClubsRow({ user }) {
     </div>
   );
 }
+
+// =====================================================================
+//  Section Informations personnelles
+// =====================================================================
+
+const GENDER_OPTIONS = [
+  { v: "MALE",          l: "Homme" },
+  { v: "FEMALE",        l: "Femme" },
+  { v: "OTHER",         l: "Autre" },
+  { v: "NOT_SPECIFIED", l: "Préfère ne pas dire" },
+];
+
+function PersoSection({ me, perso, setPerso, onSave }) {
+  const requiredFilled =
+    !!perso.email?.trim() &&
+    !!perso.birthDate &&
+    !!perso.gender && perso.gender !== "NOT_SPECIFIED";
+  const completedCount = [
+    !!perso.email?.trim(),
+    !!perso.birthDate,
+    !!perso.gender && perso.gender !== "NOT_SPECIFIED",
+  ].filter(Boolean).length;
+
+  const isComplete = me?.profileComplete;
+  const showWarning = me?.role === "JOUEUR" && !isComplete;
+
+  return (
+    <div className="card" style={
+      showWarning
+        ? { border: "1px solid rgba(239,68,68,0.4)", background: "rgba(239,68,68,0.04)" }
+        : undefined
+    }>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <h3 style={{
+          margin: 0, fontFamily: "Inter, sans-serif",
+          fontSize: 11, fontWeight: 600, color: "#8A92B2",
+          textTransform: "uppercase", letterSpacing: 2.5,
+        }}>
+          <i className="fi fi-rr-user" style={{ color: "#7B5CFF", marginRight: 8 }} />
+          Informations personnelles
+        </h3>
+        {me?.role === "JOUEUR" && (
+          <span style={{
+            fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 100,
+            background: isComplete ? "rgba(34,197,94,0.18)" : "rgba(239,68,68,0.18)",
+            color: isComplete ? "#22C55E" : "#F87171",
+          }}>
+            {isComplete ? "✓ Profil complet" : `${completedCount}/3 champs requis`}
+          </span>
+        )}
+      </div>
+
+      {showWarning && (
+        <div style={{
+          padding: "10px 14px", borderRadius: 6, marginBottom: 14,
+          background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)",
+          color: "#FCA5A5", fontSize: 12,
+        }}>
+          <i className="fi fi-rr-exclamation" /> &nbsp;
+          Tant que ton profil n'est pas complet, tu ne peux pas créer de match,
+          t'inscrire à un tournoi ou réserver une table. Renseigne au minimum ton
+          email, ta date de naissance et ton genre.
+        </div>
+      )}
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <Field label="Email *" required={!perso.email?.trim()}>
+          <input type="email" value={perso.email}
+            onChange={(e) => setPerso({...perso, email: e.target.value})}
+            placeholder="ex. jean@example.com" style={persoInput} />
+        </Field>
+        <Field label="Date de naissance *" required={!perso.birthDate}>
+          <input type="date" value={perso.birthDate}
+            onChange={(e) => setPerso({...perso, birthDate: e.target.value})}
+            style={persoInput} />
+        </Field>
+        <Field label="Genre *" required={!perso.gender || perso.gender === "NOT_SPECIFIED"}>
+          <select value={perso.gender}
+            onChange={(e) => setPerso({...perso, gender: e.target.value})}
+            style={persoInput}>
+            <option value="">Choisir…</option>
+            {GENDER_OPTIONS.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
+          </select>
+        </Field>
+        <Field label="Téléphone (optionnel)">
+          <input type="tel" value={perso.phone}
+            onChange={(e) => setPerso({...perso, phone: e.target.value})}
+            placeholder="+33 6 12 34 56 78" style={persoInput} />
+        </Field>
+        <Field label="Pays (optionnel)">
+          <input type="text" value={perso.country}
+            onChange={(e) => setPerso({...perso, country: e.target.value})}
+            placeholder="France" style={persoInput} />
+        </Field>
+      </div>
+
+      <div style={{ marginTop: 16, display: "flex", gap: 10, alignItems: "center" }}>
+        <button type="button" onClick={onSave}
+          disabled={!requiredFilled}
+          style={{
+            background: requiredFilled ? "#7B5CFF" : "rgba(123,92,255,0.3)",
+            color: "#fff", border: "none",
+            padding: "10px 22px", borderRadius: 100,
+            cursor: requiredFilled ? "pointer" : "not-allowed",
+            fontSize: 13, fontWeight: 600, fontFamily: "inherit",
+            display: "inline-flex", alignItems: "center", gap: 8,
+          }}>
+          <i className="fi fi-rr-disk" /> Enregistrer
+        </button>
+        {!requiredFilled && (
+          <span style={{ fontSize: 11, color: "#8A92B2", fontStyle: "italic" }}>
+            Remplis les 3 champs requis pour activer
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, required, children }) {
+  return (
+    <div>
+      <div style={{
+        fontSize: 10, fontWeight: 600, letterSpacing: 1.5,
+        textTransform: "uppercase", color: required ? "#F87171" : "#8A92B2",
+        marginBottom: 5,
+      }}>{label}</div>
+      {children}
+    </div>
+  );
+}
+
+const persoInput = {
+  width: "100%", padding: "9px 12px", fontSize: 13,
+  border: "1px solid #2A3050", borderRadius: 6,
+  background: "#1A1F3D", color: "#fff", fontFamily: "inherit",
+};

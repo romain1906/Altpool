@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import notify from "devextreme/ui/notify";
 import api from "../services/api";
-import { canManage } from "../services/auth";
+import { canManage, isProfileLocked } from "../services/auth";
 import CreateTournamentModal from "../components/CreateTournamentModal";
 
 const TABS = [
@@ -238,7 +238,14 @@ function TournamentCard({ t, onOpen, onRegister, onStart, onCancel }) {
         {/* Actions */}
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }} onClick={(e) => e.stopPropagation()}>
           {t.status === "REGISTRATION" && !t.canManage && (
-            <button type="button" onClick={onRegister} style={t.isRegistered ? btnGhost : btnPrimary}>
+            <button type="button" onClick={onRegister}
+              disabled={!t.isRegistered && isProfileLocked()}
+              title={!t.isRegistered && isProfileLocked() ? "Complète ton profil pour t'inscrire" : ""}
+              style={{
+                ...(t.isRegistered ? btnGhost : btnPrimary),
+                opacity: !t.isRegistered && isProfileLocked() ? 0.5 : 1,
+                cursor: !t.isRegistered && isProfileLocked() ? "not-allowed" : "pointer",
+              }}>
               <i className={t.isRegistered ? "fi fi-rr-cross" : "fi fi-rr-user-add"} />
               &nbsp;{t.isRegistered ? "Me désinscrire" : "S'inscrire"}
             </button>
