@@ -24,9 +24,12 @@ public class LeaderboardService {
         List<LeaderboardEntry> entries = new ArrayList<>();
         int rank = 1;
         for (Player p : players) {
+            // userId peut être null si le Player n'est pas (encore) lié à un User
+            Long userId = p.getUser() != null ? p.getUser().getId() : null;
             entries.add(LeaderboardEntry.builder()
                     .rank(rank++)
                     .playerId(p.getId())
+                    .userId(userId)
                     .name(p.getName())
                     .elo(p.getElo())
                     .primaryClubName(p.getPrimaryClub().getName())

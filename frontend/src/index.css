@@ -728,3 +728,504 @@ a { color: var(--color-primary-light); }
   font-family: var(--font-ui) !important;
 }
 .dx-placeholder { color: var(--color-text-muted) !important; }
+
+/* ==================================================================
+   Leaderboard — Podium top 3, KPIs et tableau de classement
+   ================================================================== */
+
+/* ---------- Wrapper du podium (la card principale) ---------- */
+.lb-podium-card-wrap {
+  background:
+    radial-gradient(circle at 20% 0%, rgba(250, 204, 21, 0.10), transparent 60%),
+    radial-gradient(circle at 80% 0%, rgba(123, 92, 255, 0.10), transparent 60%),
+    linear-gradient(135deg, var(--color-card) 0%, var(--color-card-2) 100%);
+  padding: 28px 28px 20px;
+  overflow: hidden;
+}
+
+.lb-podium-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.lb-podium-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.3px;
+  color: var(--color-text);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.lb-podium-title i { color: var(--color-warning); }
+.lb-podium-sub {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* ---------- Podium (2 - 1 - 3) ---------- */
+.lb-podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 18px;
+  padding: 24px 8px 0;
+}
+
+.lb-podium-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1 1 0;
+  max-width: 220px;
+  min-width: 0;
+}
+
+/* La carte d'info (avatar + nom + elo) au-dessus de la marche */
+.lb-podium-card {
+  position: relative;
+  width: 100%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+  border: 1px solid rgba(123, 92, 255, 0.20);
+  border-radius: 14px;
+  padding: 22px 14px 16px;
+  text-align: center;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* Couronne du 1er */
+.lb-crown {
+  position: absolute;
+  top: -22px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 32px;
+  color: #FFE17A;
+  filter: drop-shadow(0 2px 14px rgba(250, 204, 21, 0.7));
+  animation: crown-bob 3s ease-in-out infinite;
+}
+@keyframes crown-bob {
+  0%, 100% { transform: translate(-50%, 0); }
+  50%      { transform: translate(-50%, -4px); }
+}
+
+/* L'avatar */
+.lb-podium-avatar {
+  display: inline-flex;
+  padding: 4px;
+  border: 2px solid var(--color-primary);
+  border-radius: 50%;
+  background: var(--color-bg);
+  margin-bottom: 12px;
+}
+
+.lb-podium-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--color-text);
+  letter-spacing: -0.2px;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lb-podium-club {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.3px;
+  margin-bottom: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Bloc Elo XXL */
+.lb-podium-elo {
+  background: rgba(11, 15, 42, 0.55);
+  border: 1px solid rgba(123, 92, 255, 0.25);
+  border-radius: 10px;
+  padding: 10px 8px;
+}
+.lb-podium-elo-value {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: -1.2px;
+  background: linear-gradient(135deg, var(--color-primary-light), var(--color-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-feature-settings: "tnum", "lnum";
+}
+.lb-podium-elo-label {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+}
+
+/* La marche, en gradient gold/silver/bronze, avec gros chiffre */
+.lb-podium-step {
+  width: 100%;
+  margin-top: 10px;
+  border-radius: 12px 12px 4px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.30),
+    inset 0 -10px 30px rgba(0, 0, 0, 0.25),
+    0 8px 30px rgba(0, 0, 0, 0.35);
+}
+.lb-podium-rank {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 44px;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  letter-spacing: -1.5px;
+}
+
+/* Le 1er légèrement plus haut + plus glow */
+.lb-podium-col-1 .lb-podium-card {
+  border-color: rgba(250, 204, 21, 0.45);
+  box-shadow:
+    0 0 0 1px rgba(250, 204, 21, 0.20),
+    0 12px 40px rgba(250, 204, 21, 0.18);
+  transform: translateY(-12px);
+}
+.lb-podium-col-1 .lb-podium-rank { font-size: 56px; }
+
+/* Tag "moi" sur le podium (déclaré ici car partagé avec le tableau) */
+.lb-me-tag {
+  display: inline-block;
+  margin-left: 8px;
+  background: rgba(123, 92, 255, 0.20);
+  color: var(--color-primary-light);
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 100px;
+  border: 1px solid rgba(123, 92, 255, 0.35);
+  vertical-align: middle;
+}
+
+/* ---------- KPIs ---------- */
+.lb-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.lb-kpi {
+  background: linear-gradient(135deg, var(--color-card) 0%, var(--color-card-2) 100%);
+  border: 1px solid var(--color-card-border);
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.lb-kpi:hover {
+  transform: translateY(-2px);
+  border-color: rgba(123, 92, 255, 0.35);
+  box-shadow: 0 12px 32px rgba(123, 92, 255, 0.12);
+}
+.lb-kpi-icon {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  background: rgba(123, 92, 255, 0.10);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.lb-kpi-body { min-width: 0; }
+.lb-kpi-label {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--color-text-muted);
+}
+.lb-kpi-value {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 28px;
+  line-height: 1.1;
+  letter-spacing: -0.8px;
+  color: var(--color-text);
+  font-feature-settings: "tnum", "lnum";
+  margin-top: 4px;
+}
+
+/* ---------- Toolbar (recherche + filtre club) ---------- */
+.lb-toolbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.lb-search {
+  flex: 1 1 260px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.lb-search i {
+  position: absolute;
+  left: 14px;
+  color: var(--color-text-muted);
+  pointer-events: none;
+  font-size: 14px;
+}
+.lb-search input {
+  width: 100%;
+  padding: 10px 14px 10px 38px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(123, 92, 255, 0.25);
+  border-radius: 100px;
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.lb-search input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(123, 92, 255, 0.18);
+}
+.lb-search input::placeholder { color: var(--color-text-muted); }
+
+.lb-filter select {
+  padding: 10px 36px 10px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(123, 92, 255, 0.25);
+  border-radius: 100px;
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: 14px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A92B2' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  transition: border-color 0.2s;
+}
+.lb-filter select:focus { border-color: var(--color-primary); }
+.lb-filter select option { background: var(--color-card); color: var(--color-text); }
+
+/* ---------- Tableau ---------- */
+.lb-table-wrap { overflow-x: auto; }
+
+.lb-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 6px; /* écart vertical entre lignes pour effet "cartes" */
+}
+.lb-table thead th {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--color-text-muted);
+  text-align: left;
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(123, 92, 255, 0.18);
+}
+
+.lb-row td {
+  background: rgba(18, 23, 53, 0.55);
+  padding: 12px 14px;
+  border-top: 1px solid rgba(123, 92, 255, 0.10);
+  border-bottom: 1px solid rgba(123, 92, 255, 0.10);
+  vertical-align: middle;
+  transition: background 0.2s;
+}
+.lb-row td:first-child {
+  border-left: 1px solid rgba(123, 92, 255, 0.10);
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+.lb-row td:last-child {
+  border-right: 1px solid rgba(123, 92, 255, 0.10);
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+.lb-row:hover td {
+  background: rgba(123, 92, 255, 0.10);
+}
+
+/* Mise en évidence des 3 premiers dans le tableau */
+.lb-row-top td {
+  background: linear-gradient(90deg,
+    rgba(123, 92, 255, 0.08) 0%,
+    rgba(18, 23, 53, 0.55) 60%);
+}
+.lb-row-top-1 td:first-child { box-shadow: inset 3px 0 0 #FACC15; }
+.lb-row-top-2 td:first-child { box-shadow: inset 3px 0 0 #C7CDDB; }
+.lb-row-top-3 td:first-child { box-shadow: inset 3px 0 0 #C97A4A; }
+
+/* Mise en évidence "moi" — anneau violet */
+.lb-row-me td {
+  background: rgba(123, 92, 255, 0.12);
+  border-color: rgba(123, 92, 255, 0.45);
+}
+.lb-row-me td:first-child { box-shadow: inset 3px 0 0 var(--color-primary); }
+
+/* Cellule rang (avec icône trophée pour top 3) */
+.lb-rank {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--color-text);
+  letter-spacing: -0.2px;
+}
+.lb-rank i { font-size: 16px; }
+.lb-rank-default {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--color-text-muted);
+  padding-left: 6px;
+}
+.lb-rank-num { font-feature-settings: "tnum"; }
+
+/* Bloc joueur (avatar + nom) */
+.lb-player {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.lb-player-name {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Pastille club */
+.lb-club-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  background: rgba(123, 92, 255, 0.14);
+  border: 1px solid rgba(123, 92, 255, 0.25);
+  border-radius: 100px;
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: 11px;
+  color: var(--color-primary-light);
+  letter-spacing: 0.2px;
+}
+
+/* La pastille ELO — point central de la mise en évidence */
+.lb-elo-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: -0.3px;
+  font-feature-settings: "tnum", "lnum";
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(123, 92, 255, 0.25);
+  min-width: 72px;
+  text-align: center;
+}
+.lb-elo-badge-podium {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.30),
+    0 4px 16px rgba(0, 0, 0, 0.30);
+  font-weight: 800;
+}
+
+/* Etats vides / chargement */
+.lb-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--color-text-muted);
+  font-family: var(--font-ui);
+  font-size: 14px;
+}
+.lb-empty i {
+  display: block;
+  font-size: 36px;
+  color: var(--color-primary);
+  margin-bottom: 12px;
+}
+.lb-empty-row {
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: 20px !important;
+  font-size: 13px;
+}
+.lb-spin { animation: lb-spin 1s linear infinite; display: inline-block !important; }
+@keyframes lb-spin { to { transform: rotate(360deg); } }
+
+.lb-th-club { /* aligne avec le contenu */ }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 720px) {
+  .lb-podium { gap: 10px; }
+  .lb-podium-card { padding: 16px 8px 12px; }
+  .lb-podium-elo-value { font-size: 22px; }
+  .lb-podium-name { font-size: 13px; }
+  .lb-podium-club { font-size: 10px; margin-bottom: 8px; }
+  .lb-podium-rank { font-size: 32px; }
+  .lb-podium-col-1 .lb-podium-rank { font-size: 40px; }
+  .lb-crown { font-size: 24px; top: -16px; }
+
+  .lb-kpi-row { grid-template-columns: 1fr; gap: 10px; }
+  .lb-kpi { padding: 14px 16px; }
+  .lb-kpi-icon { width: 40px; height: 40px; font-size: 18px; }
+  .lb-kpi-value { font-size: 22px; }
+
+  .lb-th-club, .lb-td-club { display: none; }
+  .lb-rank { font-size: 14px; }
+  .lb-elo-badge { font-size: 14px; padding: 5px 11px; min-width: 60px; }
+  .lb-player-name { font-size: 13px; }
+}
+
+@media (max-width: 420px) {
+  .lb-podium-avatar { padding: 3px; }
+  .lb-podium-card { padding: 14px 6px 10px; }
+  .lb-podium-elo { padding: 6px 4px; }
+  .lb-podium-elo-value { font-size: 18px; }
+  .lb-podium-elo-label { font-size: 8px; letter-spacing: 1.5px; }
+}
