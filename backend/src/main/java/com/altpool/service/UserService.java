@@ -4,6 +4,7 @@ import com.altpool.dto.ChangePasswordRequest;
 import com.altpool.dto.ClubDto;
 import com.altpool.dto.CreateUserRequest;
 import com.altpool.dto.UpdateProfileRequest;
+import com.altpool.dto.UpdateUserRequest;
 import com.altpool.dto.UserDto;
 import com.altpool.entity.Club;
 import com.altpool.entity.Player;
@@ -54,6 +55,36 @@ public class UserService {
                 .role(req.getRole())
                 .managedClubs(managed)
                 .build();
+        return toDto(userRepository.save(u));
+    }
+
+    /**
+     * Met à jour le rôle et/ou les clubs gérés d'un user existant (ADMIN only).
+     * - Si role change vers GERANT : applique managedClubIds (ou laisse les clubs actuels si null)
+     * - Si role change vers ADMIN ou JOUEUR : vide les clubs gérés
+     */
+    @Transactional
+    public UserDto updateUser(Long userId, UpdateUserRequest req) {
+        User u = userRepository.findById(userId)
+                .orElseThrow(() -> ApiException.notFound("Utilisateur introuvable"));
+
+        if (req.getRole() != null) {
+            u.setRole(req.getRole());
+            if (req.getRole() != Role.GERANT) {
+                u.getManagedClubs().clear();
+            }
+        }
+
+        if (req.getManagedClubIds() != null && u.getRole() == Role.GERANT) {
+            Set<Club> newClubs = new HashSet<>();
+            for (Long cid : req.getManagedClubIds()) {
+                newClubs.add(clubRepository.findById(cid)
+                        .orElseThrow(() -> ApiException.notFound("Club introuvable : " + cid)));
+            }
+            u.getManagedClubs().clear();
+            u.getManagedClubs().addAll(newClubs);
+        }
+
         return toDto(userRepository.save(u));
     }
 

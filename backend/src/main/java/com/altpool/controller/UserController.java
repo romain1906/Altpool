@@ -4,6 +4,7 @@ import com.altpool.dto.ChangePasswordRequest;
 import com.altpool.dto.ClubDto;
 import com.altpool.dto.CreateUserRequest;
 import com.altpool.dto.UpdateProfileRequest;
+import com.altpool.dto.UpdateUserRequest;
 import com.altpool.dto.UserDto;
 import com.altpool.service.UserService;
 import jakarta.validation.Valid;
@@ -54,5 +55,12 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public UserDto create(@Valid @RequestBody CreateUserRequest req) {
         return userService.create(req);
+    }
+
+    /** Modifie le rôle et/ou les clubs gérés d'un user existant. */
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public UserDto updateUser(@PathVariable Long id, @Valid @RequestBody UpdateUserRequest req) {
+        return userService.updateUser(id, req);
     }
 }

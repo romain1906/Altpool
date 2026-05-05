@@ -689,7 +689,13 @@ a { color: var(--color-primary-light); }
   background: var(--color-card-2) !important;
 }
 .dx-datagrid .dx-row:hover > td {
-  background: rgba(123, 92, 255, 0.12) !important;
+  background: linear-gradient(0deg, rgba(91, 63, 224, 0.35), rgba(91, 63, 224, 0.35)),
+              var(--color-card-2) !important;
+  color: #fff !important;
+}
+/* Forcer la visibilité des éléments enfants au hover (boutons, icônes, pills) */
+.dx-datagrid .dx-row:hover > td * {
+  filter: brightness(1.1);
 }
 
 .dx-popup-wrapper > .dx-overlay-content {
