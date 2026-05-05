@@ -1,8 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import DataGrid, { Column, Paging, SearchPanel } from "devextreme-react/data-grid";
 import Popup from "devextreme-react/popup";
-import Button from "devextreme-react/button";
-import Form, { SimpleItem, Label } from "devextreme-react/form";
 import notify from "devextreme/ui/notify";
 import api from "../services/api";
 
@@ -40,12 +38,17 @@ export default function AdminUsers() {
   useEffect(() => { load(); }, [load]);
 
   // ----- Création --------------------------------------------------------
+  const openCreate = () => {
+    setCreateForm({ username: "", password: "", role: "GERANT", managedClubIds: [] });
+    setCreatePopup(true);
+  };
   const handleCreate = async () => {
+    if (!createForm.username?.trim()) { notify("Identifiant requis", "error", 2500); return; }
+    if (!createForm.password?.trim()) { notify("Mot de passe requis", "error", 2500); return; }
     try {
       await api.post("/users", createForm);
       notify("Utilisateur créé", "success", 2000);
       setCreatePopup(false);
-      setCreateForm({ username: "", password: "", role: "GERANT", managedClubIds: [] });
       load();
     } catch (err) {
       notify(err.response?.data?.message || "Erreur", "error", 3000);
@@ -62,7 +65,6 @@ export default function AdminUsers() {
     });
     setEditPopup(true);
   };
-
   const handleUpdate = async () => {
     try {
       await api.patch(`/users/${editForm.id}`, {
@@ -78,9 +80,6 @@ export default function AdminUsers() {
   };
 
   // ----- Cell renderers --------------------------------------------------
-
-  // Helper : DevExtreme passe parfois { data: rowData } et parfois rowData directement.
-  // On gère les 2 cas pour être défensif.
   const getRow = (info) => info?.data?.role !== undefined ? info.data : info;
 
   const RoleCell = (info) => {
@@ -150,7 +149,7 @@ export default function AdminUsers() {
         <h2 className="page-title">
           <i className="fi fi-rr-user-shield" /> Utilisateurs
         </h2>
-        <button type="button" onClick={() => setCreatePopup(true)}
+        <button type="button" onClick={openCreate}
           style={{
             background: "#7B5CFF", color: "#fff", border: "none",
             padding: "10px 18px", borderRadius: 100, cursor: "pointer",
@@ -179,51 +178,14 @@ export default function AdminUsers() {
         onHiding={() => setCreatePopup(false)}
         hideOnOutsideClick
         title="Nouvel utilisateur"
-        width={460}
-        height={500}
+        width={520}
+        height={620}
       >
-        <Form formData={createForm} labelLocation="top">
-          <SimpleItem dataField="username" isRequired>
-            <Label text="Identifiant" />
-          </SimpleItem>
-          <SimpleItem
-            dataField="password"
-            editorType="dxTextBox"
-            editorOptions={{ mode: "password" }}
-            isRequired
-          >
-            <Label text="Mot de passe" />
-          </SimpleItem>
-          <SimpleItem
-            dataField="role"
-            editorType="dxSelectBox"
-            editorOptions={{
-              dataSource: ROLE_OPTIONS, valueExpr: "value", displayExpr: "label",
-            }}
-            isRequired
-          >
-            <Label text="Rôle" />
-          </SimpleItem>
-          {createForm.role === "GERANT" && (
-            <SimpleItem
-              dataField="managedClubIds"
-              editorType="dxTagBox"
-              editorOptions={{
-                dataSource: clubs, valueExpr: "id", displayExpr: "name",
-                placeholder: "Sélectionne les clubs à gérer",
-                showSelectionControls: true,
-                applyValueMode: "useButtons",
-              }}
-            >
-              <Label text="Clubs gérés" />
-            </SimpleItem>
-          )}
-        </Form>
-        <div style={{ marginTop: 16, textAlign: "right" }}>
-          <Button text="Annuler" onClick={() => setCreatePopup(false)} />
-          &nbsp;
-          <Button text="Créer" type="default" icon="save" onClick={handleCreate} />
-        </div>
+        <UserForm
+          form={createForm} setForm={setCreateForm} clubs={clubs} mode="create"
+          onCancel={() => setCreatePopup(false)}
+          onSubmit={handleCreate}
+        />
       </Popup>
 
       {/* ---------- Popup Édition --------------------------------------- */}
@@ -232,67 +194,199 @@ export default function AdminUsers() {
         onHiding={() => setEditPopup(false)}
         hideOnOutsideClick
         title={`Éditer — ${editForm.username}`}
-        width={500}
-        height={520}
+        width={520}
+        height={580}
       >
-        <div style={{
-          padding: "12px 14px", borderRadius: 6, marginBottom: 16,
-          background: "rgba(123,92,255,0.08)", border: "1px solid rgba(123,92,255,0.3)",
-          color: "#C9D1FF", fontSize: 12,
-        }}>
-          <i className="fi fi-rr-info" /> &nbsp;
-          Tu peux promouvoir un joueur en gérant en changeant son rôle ci-dessous.
-          Si tu choisis <strong>Gérant</strong>, sélectionne les clubs qu'il devra gérer.
-        </div>
-
-        <Form formData={editForm} labelLocation="top">
-          <SimpleItem editorOptions={{ readOnly: true, value: editForm.username }}
-                      editorType="dxTextBox">
-            <Label text="Identifiant (non modifiable)" />
-          </SimpleItem>
-          <SimpleItem
-            dataField="role"
-            editorType="dxSelectBox"
-            editorOptions={{
-              dataSource: ROLE_OPTIONS, valueExpr: "value", displayExpr: "label",
-            }}
-            isRequired
-          >
-            <Label text="Rôle" />
-          </SimpleItem>
-          {editForm.role === "GERANT" && (
-            <SimpleItem
-              dataField="managedClubIds"
-              editorType="dxTagBox"
-              editorOptions={{
-                dataSource: clubs, valueExpr: "id", displayExpr: "name",
-                placeholder: "Sélectionne les clubs à gérer",
-                showSelectionControls: true,
-                applyValueMode: "useButtons",
-              }}
-            >
-              <Label text="Clubs gérés" />
-            </SimpleItem>
-          )}
-          {editForm.role !== "GERANT" && (
-            <div style={{
-              padding: "10px 14px", borderRadius: 6, marginTop: 8,
-              background: "rgba(250,204,21,0.08)", border: "1px solid rgba(250,204,21,0.3)",
-              color: "#FACC15", fontSize: 11,
-            }}>
-              <i className="fi fi-rr-exclamation" /> &nbsp;
-              Le rôle <strong>{ROLE_OPTIONS.find(o => o.value === editForm.role)?.label}</strong> ne gère pas de club —
-              les clubs précédents seront détachés à la sauvegarde.
-            </div>
-          )}
-        </Form>
-
-        <div style={{ marginTop: 20, textAlign: "right" }}>
-          <Button text="Annuler" onClick={() => setEditPopup(false)} />
-          &nbsp;
-          <Button text="Enregistrer" type="default" icon="save" onClick={handleUpdate} />
-        </div>
+        <UserForm
+          form={editForm} setForm={setEditForm} clubs={clubs} mode="edit"
+          onCancel={() => setEditPopup(false)}
+          onSubmit={handleUpdate}
+        />
       </Popup>
     </div>
   );
 }
+
+// =====================================================================
+//  Formulaire user (HTML natif, fiable, réactif)
+// =====================================================================
+
+function UserForm({ form, setForm, clubs, mode, onCancel, onSubmit }) {
+  const isEdit = mode === "edit";
+
+  const toggleClub = (clubId) => {
+    const current = form.managedClubIds || [];
+    const next = current.includes(clubId)
+      ? current.filter((id) => id !== clubId)
+      : [...current, clubId];
+    setForm({ ...form, managedClubIds: next });
+  };
+
+  const selectAll = () => setForm({ ...form, managedClubIds: clubs.map((c) => c.id) });
+  const clearAll = () => setForm({ ...form, managedClubIds: [] });
+
+  return (
+    <div style={{ overflow: "auto", maxHeight: "100%", paddingRight: 4 }}>
+      {isEdit && (
+        <div style={{
+          padding: "10px 14px", borderRadius: 6, marginBottom: 14,
+          background: "rgba(123,92,255,0.08)", border: "1px solid rgba(123,92,255,0.3)",
+          color: "#C9D1FF", fontSize: 12,
+        }}>
+          <i className="fi fi-rr-info" /> &nbsp;
+          Promeut un joueur en gérant ou modifie ses clubs gérés.
+        </div>
+      )}
+
+      {/* Identifiant */}
+      <Field label={isEdit ? "Identifiant (non modifiable)" : "Identifiant *"}>
+        <input
+          type="text"
+          value={form.username || ""}
+          disabled={isEdit}
+          onChange={(e) => setForm({ ...form, username: e.target.value })}
+          style={{ ...inputStyle, opacity: isEdit ? 0.6 : 1 }}
+        />
+      </Field>
+
+      {/* Mot de passe — uniquement à la création */}
+      {!isEdit && (
+        <Field label="Mot de passe *">
+          <input
+            type="password"
+            value={form.password || ""}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            style={inputStyle}
+          />
+        </Field>
+      )}
+
+      {/* Rôle */}
+      <Field label="Rôle">
+        <div style={{ display: "flex", gap: 8 }}>
+          {ROLE_OPTIONS.map((o) => (
+            <button key={o.value} type="button"
+              onClick={() => setForm({ ...form, role: o.value })}
+              style={{
+                flex: 1, padding: "10px 14px", borderRadius: 100,
+                background: form.role === o.value ? "#7B5CFF" : "rgba(123,92,255,0.1)",
+                color: form.role === o.value ? "#fff" : "#9B7FFF",
+                border: "none", cursor: "pointer",
+                fontFamily: "inherit", fontSize: 13, fontWeight: 600,
+              }}>
+              {o.label}
+            </button>
+          ))}
+        </div>
+      </Field>
+
+      {/* Clubs (uniquement si Gérant) */}
+      {form.role === "GERANT" && (
+        <Field label={`Clubs gérés (${(form.managedClubIds || []).length} / ${clubs.length})`}>
+          {clubs.length === 0 ? (
+            <div style={hintStyle}>Aucun club n'existe encore.</div>
+          ) : (
+            <>
+              <div style={{ display: "flex", gap: 8, marginBottom: 8, fontSize: 11 }}>
+                <button type="button" onClick={selectAll} style={miniBtn}>Tout sélectionner</button>
+                <button type="button" onClick={clearAll} style={miniBtn}>Tout désélectionner</button>
+              </div>
+              <div style={{
+                display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+                gap: 6, padding: 10,
+                background: "rgba(0,0,0,0.2)", border: "1px solid #2A3050", borderRadius: 8,
+                maxHeight: 240, overflowY: "auto",
+              }}>
+                {clubs.map((c) => {
+                  const checked = (form.managedClubIds || []).includes(c.id);
+                  return (
+                    <label key={c.id}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 8,
+                        padding: "8px 10px", borderRadius: 6,
+                        background: checked ? "rgba(250,204,21,0.18)" : "rgba(123,92,255,0.06)",
+                        border: checked ? "1px solid rgba(250,204,21,0.5)" : "1px solid transparent",
+                        cursor: "pointer", fontSize: 13,
+                        color: checked ? "#FACC15" : "#C9D1FF",
+                        fontWeight: checked ? 600 : 500,
+                        transition: "background 0.15s",
+                      }}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleClub(c.id)}
+                        style={{ accentColor: "#FACC15", width: 16, height: 16, flexShrink: 0 }}
+                      />
+                      <span style={{ flex: 1 }}>{c.name}</span>
+                      {checked && <i className="fi fi-sr-check" style={{ color: "#FACC15" }} />}
+                    </label>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </Field>
+      )}
+
+      {form.role && form.role !== "GERANT" && (
+        <div style={{
+          padding: "10px 14px", borderRadius: 6, marginTop: 8,
+          background: "rgba(250,204,21,0.08)", border: "1px solid rgba(250,204,21,0.3)",
+          color: "#FACC15", fontSize: 11,
+        }}>
+          <i className="fi fi-rr-exclamation" /> &nbsp;
+          Le rôle <strong>{ROLE_OPTIONS.find(o => o.value === form.role)?.label}</strong> ne gère pas de club —
+          les éventuels clubs précédents seront détachés à la sauvegarde.
+        </div>
+      )}
+
+      <div style={{ marginTop: 20, display: "flex", gap: 10, justifyContent: "flex-end" }}>
+        <button type="button" onClick={onCancel} style={btnGhost}>Annuler</button>
+        <button type="button" onClick={onSubmit} style={btnPrimary}>
+          <i className="fi fi-rr-disk" /> &nbsp;{isEdit ? "Enregistrer" : "Créer"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ----- Helpers UI ------------------------------------------------------
+
+function Field({ label, children }) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div style={{
+        fontSize: 10, fontWeight: 700, letterSpacing: 1.5,
+        textTransform: "uppercase", color: "#8A92B2", marginBottom: 6,
+      }}>{label}</div>
+      {children}
+    </div>
+  );
+}
+
+const inputStyle = {
+  width: "100%", padding: "9px 12px", fontSize: 13,
+  border: "1px solid #2A3050", borderRadius: 6,
+  background: "#1A1F3D", color: "#fff", fontFamily: "inherit",
+};
+const hintStyle = {
+  fontSize: 12, color: "#8A92B2", fontStyle: "italic",
+  padding: "10px 14px", background: "rgba(0,0,0,0.2)", borderRadius: 6,
+};
+const miniBtn = {
+  background: "transparent", color: "#9B7FFF",
+  border: "1px solid rgba(123,92,255,0.4)",
+  padding: "4px 10px", borderRadius: 100, cursor: "pointer",
+  fontFamily: "inherit", fontSize: 11, fontWeight: 600,
+};
+const btnPrimary = {
+  background: "#7B5CFF", color: "#fff", border: "none",
+  padding: "10px 22px", borderRadius: 100, cursor: "pointer",
+  fontFamily: "inherit", fontSize: 13, fontWeight: 600,
+  display: "inline-flex", alignItems: "center",
+};
+const btnGhost = {
+  background: "transparent", color: "#8A92B2",
+  border: "1px solid #2A3050", padding: "10px 22px", borderRadius: 100,
+  cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 500,
+};
