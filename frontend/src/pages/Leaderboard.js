@@ -35,6 +35,32 @@ const RANK_THEME = {
   },
 };
 
+/** Retourne les infos d'affichage du streak (win ou lose), ou null si < 3. */
+function streakInfo(entry) {
+  const w = entry.winStreak || 0;
+  const l = entry.loseStreak || 0;
+  if (w >= 3) return { kind: "win", count: w };
+  if (l >= 3) return { kind: "lose", count: l };
+  return null;
+}
+
+/** Petit badge "flamme" affiché à partir de 3 victoires (ou 3 défaites) consécutives. */
+function StreakBadge({ entry, size = "sm" }) {
+  const s = streakInfo(entry);
+  if (!s) return null;
+  const cls = s.kind === "win" ? "lb-streak lb-streak-win" : "lb-streak lb-streak-lose";
+  const icon = s.kind === "win" ? "fi fi-sr-flame" : "fi fi-sr-snowflake";
+  const title = s.kind === "win"
+    ? `${s.count} victoires consécutives`
+    : `${s.count} défaites consécutives`;
+  return (
+    <span className={`${cls} lb-streak-${size}`} title={title} aria-label={title}>
+      <i className={icon} />
+      <span className="lb-streak-num">{s.count}</span>
+    </span>
+  );
+}
+
 /** Génère une teinte stable à partir d'un nom (pour les avatars en initiales). */
 function colorFromName(name) {
   const palette = ["#7B5CFF", "#3B82F6", "#22C55E", "#EC4899", "#F59E0B", "#06B6D4"];
@@ -80,6 +106,9 @@ function PodiumStep({ entry, rank, isMe }) {
         {entry.primaryClubName && (
           <div className="lb-podium-club">{entry.primaryClubName}</div>
         )}
+        <div className="lb-podium-streak-row">
+          <StreakBadge entry={entry} size="md" />
+        </div>
         <div className="lb-podium-elo">
           <div className="lb-podium-elo-value">{entry.elo}</div>
           <div className="lb-podium-elo-label">Elo</div>
@@ -126,13 +155,10 @@ function RankCell({ rank }) {
 
 /** Pastille ELO avec gradient violet (mise en évidence forte). */
 function EloBadge({ elo, rank }) {
-  // Le top 3 reçoit un gradient or/argent/bronze, les autres le gradient violet
-  const theme = RANK_THEME[rank];
-  const style = theme
-    ? { background: theme.grad, color: rank === 2 ? "#1F2937" : "#fff" }
-    : null;
+  // Le top 3 reçoit un gradient flat or/argent/bronze, les autres le gradient violet
+  const podiumCls = rank >= 1 && rank <= 3 ? `lb-elo-badge-podium lb-elo-badge-${rank}` : "";
   return (
-    <span className={`lb-elo-badge ${theme ? "lb-elo-badge-podium" : ""}`} style={style}>
+    <span className={`lb-elo-badge ${podiumCls}`}>
       {elo}
     </span>
   );
@@ -317,7 +343,8 @@ export default function Leaderboard() {
                             bg={colorFromName(r.name)}
                           />
                           <div className="lb-player-name">
-                            {r.name}
+                            <span className="lb-player-name-text">{r.name}</span>
+                            <StreakBadge entry={r} />
                             {isMe && <span className="lb-me-tag">moi</span>}
                           </div>
                         </div>
@@ -354,7 +381,8 @@ export default function Leaderboard() {
                             bg={colorFromName(r.name)}
                           />
                           <div className="lb-player-name">
-                            {r.name}
+                            <span className="lb-player-name-text">{r.name}</span>
+                            <StreakBadge entry={r} />
                             {isMe && <span className="lb-me-tag">moi</span>}
                           </div>
                         </div>

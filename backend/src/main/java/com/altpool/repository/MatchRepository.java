@@ -30,4 +30,17 @@ public interface MatchRepository extends JpaRepository<MatchEntity, Long> {
     List<MatchEntity> findPendingForUser(@Param("userId") Long userId);
 
     long countByStatus(MatchStatus status);
+
+    /**
+     * Tous les matchs RANKED validés (avec un winner), du plus récent au plus ancien.
+     * Utilisé pour calculer les win/lose streaks de chaque joueur.
+     */
+    @Query("""
+        SELECT m FROM MatchEntity m
+        WHERE m.status = MatchStatus.VALIDATED
+          AND m.type = MatchType.RANKED
+          AND m.winner IS NOT NULL
+        ORDER BY COALESCE(m.validatedAt, m.finishedAt, m.createdAt) DESC
+    """)
+    List<MatchEntity> findValidatedRankedForStreaks();
 }
